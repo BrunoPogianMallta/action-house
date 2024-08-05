@@ -1,10 +1,10 @@
 const express = require('express');
-const { userController } = require('../controllers');
+const userRoutes = require('./user.Routes');
+const itemRoutes = require('./item.Routes');
 
 const router = express.Router();
 
-//rotas
-router.post('/register', userController.registerUser);
-
+router.use(userRoutes);
+router.use(itemRoutes);
 
 module.exports = router;
