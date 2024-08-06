@@ -1,8 +1,10 @@
 const express = require('express');
 const { sequelize, connectToDatabase } = require('./config/database'); 
 const routes = require('./routes');
+const cors = require('cors');
 
 const app = express();
+app.use(cors());
 app.use(express.json()); // Middleware para parsing do corpo da requisição
 
 // Middleware para parsing de dados de formulário (opcional, caso esteja usando formulários)

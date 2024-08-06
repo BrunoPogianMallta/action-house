@@ -34,7 +34,7 @@ exports.registerUser = async( req, res) =>{
         res.status(200).json({ message: 'Usuário registrado com sucesso!',token});
 
     } catch (error) {
-        console.log('Erroao registrar usuário:',error);
+        console.log('Erro ao registrar usuário:',error);
         res.status(500).json({error: 'Erro interno do servidor.'});       
     }
 }
@@ -81,3 +81,26 @@ exports.loginUser = async (req, res) => {
       res.status(500).json({ error: 'Erro interno do servidor.' });
     }
   };
+
+  exports.getUserDetails = async (req, res) => {
+    try {
+        const userId = req.user.id; // ID do usuário extraído do token
+
+        const user = await User.findByPk(userId);
+
+        if (!user) {
+            return res.status(404).json({ error: 'Usuário não encontrado.' });
+        }
+
+        res.json({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            balance: user.balance,
+            accountType: user.accountType
+        });
+    } catch (error) {
+        console.error('Erro ao buscar dados do usuário:', error);
+        res.status(500).json({ error: 'Erro interno do servidor.' });
+    }
+};
