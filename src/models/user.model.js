@@ -1,7 +1,12 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
+const { v4: uuidv4 } = require('uuid'); 
 
 const User = sequelize.define('User', {
+  id: {
+    type: DataTypes.STRING, 
+    primaryKey: true
+  },
   name: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -22,7 +27,15 @@ const User = sequelize.define('User', {
   accountType: {
     type: DataTypes.STRING,
     allowNull: false,
-    defaultValue: 'basic', // ou outro valor padrão que desejar
+    defaultValue: 'basic', 
+  }
+}, {
+  timestamps: true,
+  hooks: {
+    beforeCreate: (user) => {
+      const prefix = User.tableName.toUpperCase() + '_';
+      user.id = `${prefix}${uuidv4()}`; 
+    }
   }
 });
 

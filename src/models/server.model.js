@@ -1,10 +1,10 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
-const { v4: uuidv4 } = require('uuid'); // Importa o pacote UUID
+const { v4: uuidv4 } = require('uuid'); 
 
 const Server = sequelize.define('Server', {
   id: {
-    type: DataTypes.STRING, // Define o tipo como STRING para suportar UUIDs com prefixo
+    type: DataTypes.STRING, 
     primaryKey: true
   },
   serverName: {
@@ -15,7 +15,7 @@ const Server = sequelize.define('Server', {
   timestamps: true,
   hooks: {
     beforeCreate: (server) => {
-      const prefix = Server.tableName.toUpperCase() + '_'; // Usa o nome da tabela como prefixo
+      const prefix = Server.tableName.toUpperCase() + '_'; 
       server.id = `${prefix}${uuidv4()}`; // Gera o UUID com o prefixo
     }
   }

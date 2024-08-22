@@ -2,7 +2,7 @@ require('dotenv').config();
 const { Sequelize } = require('sequelize');
 
 // Determina a URL do banco de dados a ser usado com base na variável de ambiente
-const databaseUrl = process.env.REMOTE_DB_URL || `postgres://${process.env.LOCAL_DB_USER}:${process.env.LOCAL_DB_PASSWORD}@localhost:5432/${process.env.LOCAL_DB_NAME}`;
+const databaseUrl =`postgres://${process.env.LOCAL_DB_USER}:${process.env.LOCAL_DB_PASSWORD}@localhost:5432/${process.env.LOCAL_DB_NAME}`;
 
 const sequelize = new Sequelize(databaseUrl, {
     dialect: 'postgres',

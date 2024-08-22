@@ -1,61 +1,48 @@
-const { Item, User, Server} = require('../models');
+const { Item, User, Server, Auction } = require('../models');
+const { sequelize } = require('../config/database');
+const { v4: uuidv4 } = require('uuid'); 
 const { Op } = require('sequelize');
 const { ITEM_TYPES } = require('../utils'); 
 
-
 const SALE_DURATIONS = [12, 24, 48];
 
+// Função para validar dados de item
+const validateItemData = ({ itemName, itemType, saleDuration, server, price }) => {
+  const errors = [];
+
+  if (!itemName) errors.push('itemName is missing');
+  if (!itemType) errors.push('itemType is missing');
+  if (!saleDuration) errors.push('saleDuration is missing');
+  if (!price) errors.push('price is missing');
+  if (!Object.values(ITEM_TYPES).includes(itemType)) errors.push('Invalid item type');
+  if (!SALE_DURATIONS.includes(saleDuration)) errors.push('Invalid sale duration');
+
+  return errors;
+};
+
+// Função para enviar resposta de erro
+const sendErrorResponse = (res, status, message) => {
+  console.log(message);
+  res.status(status).json({ message });
+};
+
 exports.addItem = async (req, res) => {
-  const { itemName, itemType, saleDuration, server, price } = req.body;
+  const { itemName, itemType, saleDuration, server,itemQuantity, price } = req.body;
   const sellerId = req.user?.id;
 
-  console.log('Request Body:', req.body); 
-  console.log('item name:', itemName); 
-  console.log('Request User:', req.user); 
-  console.log('Seller ID:', sellerId); 
-
+  
   try {
-    if (!itemName) {
-      console.log('Missing itemName');
-      return res.status(400).json({ message: 'All fields are required: itemName is missing' });
-    }
-    if (!itemType) {
-      console.log('Missing itemType');
-      return res.status(400).json({ message: 'All fields are required: itemType is missing' });
-    }
-    if (!saleDuration) {
-      console.log('Missing saleDuration');
-      return res.status(400).json({ message: 'All fields are required: saleDuration is missing' });
-    }
-    if (!sellerId) {
-      console.log('Missing sellerId');
-      return res.status(400).json({ message: 'All fields are required: sellerId is missing' });
-    }
-    if (!server) {
-      console.log('Missing server');
-      return res.status(400).json({ message: 'All fields are required: server is missing' });
-    }
-    if (!price) {
-      console.log('Missing price');
-      return res.status(400).json({ message: 'All fields are required: price is missing' });
-    }
+    // Validação dos dados do item
+    const errors = validateItemData({ itemName, itemType, saleDuration, server,itemQuantity, price });
+    if (errors.length > 0) return sendErrorResponse(res, 400, `Validation errors: ${errors.join(', ')}`);
+    
+    if (!sellerId) return sendErrorResponse(res, 400, 'sellerId is missing');
 
     // Verifica se o servidor é válido
     const validServer = await Server.findOne({ where: { serverName: server } });
-    if (!validServer) {
-      return res.status(400).json({ message: 'Invalid server' });
-    }
+    if (!validServer) return sendErrorResponse(res, 400, 'Invalid server');
 
-    if (!Object.values(ITEM_TYPES).includes(itemType)) {
-      return res.status(400).json({ message: 'Invalid item type' });
-    }
-
-    if (!SALE_DURATIONS.includes(saleDuration)) {
-      return res.status(400).json({ message: 'Invalid sale duration' });
-    }
-
-    const item = await Item.create({ itemName, itemType, saleDuration, server, price, sellerId });
-
+    const item = await Item.create({ itemName, itemType, saleDuration, server, price,itemQuantity, sellerId });
     res.status(201).json(item);
   } catch (error) {
     console.error('Error adding item:', error);
@@ -63,57 +50,92 @@ exports.addItem = async (req, res) => {
   }
 };
 
-
 exports.buyItem = async (req, res) => {
   const { itemId } = req.body;
   const buyerId = req.user.id;
 
-  try {
-    const item = await Item.findByPk(itemId);
+  const transaction = await sequelize.transaction();
 
+  try {
+    // Buscar o item a ser comprado
+    const item = await Item.findByPk(itemId, { transaction });
     if (!item) {
+      console.log('Item not found:', itemId);
+      await transaction.rollback();
       return res.status(404).json({ message: 'Item not found' });
     }
 
-    const buyer = await User.findByPk(buyerId);
+    // Buscar o comprador
+    const buyer = await User.findByPk(buyerId, { transaction });
+    if (!buyer) {
+      console.log('Buyer not found:', buyerId);
+      await transaction.rollback();
+      return res.status(404).json({ message: 'Buyer not found' });
+    }
 
     if (buyer.balance < item.price) {
+      console.log('Insufficient balance for buyer:', buyerId);
+      await transaction.rollback();
       return res.status(400).json({ message: 'Insufficient balance' });
     }
 
-    // Deduz o preço do item do saldo do comprador
+    // Atualizar o saldo do comprador
     buyer.balance -= item.price;
-    await buyer.save();
+    await buyer.save({ transaction });
 
-    // Opcional: atualizar o status do item ou transferir a posse para o comprador
+    // Criar uma nova entrada na tabela de leilões
+    const auction = await Auction.create({
+      itemId: item.id, 
+      sellerId: item.sellerId,
+      itemType: item.itemType,
+      server: item.server,
+      postedDate: new Date(),
+      saleExpirationDate: new Date(Date.now() + item.saleDuration * 3600 * 1000), // Usar a duração da venda do item
+      buyerId: buyerId,
+      isSold: true,
+    }, { transaction });
 
-    res.status(200).json({ message: 'Item purchased successfully' });
+    console.log('Auction created:', auction);
+
+    // Verificar se a entrada foi realmente criada
+    const createdAuction = await Auction.findByPk(auction.id, { transaction });
+    console.log('Created Auction:', createdAuction);
+
+    // Remover o item da lista de itens disponíveis
+    await item.destroy({ transaction });
+    console.log('Item removed successfully:', itemId);
+
+    await transaction.commit();
+
+    res.status(200).json({ message: 'Item purchased successfully', auction });
   } catch (error) {
     console.error('Error purchasing item:', error);
+    await transaction.rollback();
     res.status(500).json({ message: 'Internal server error' });
   }
 };
 
-
 exports.getAllItems = async (req, res) => {
   try {
-   
     const items = await Item.findAll({
       include: [{
         model: User,
         as: 'seller',
-        attributes: ['name'] // Inclui apenas o nome do selller
+        attributes: ['name']
       }],
-      attributes: ['itemName', 'itemType', 'saleDuration', 'server', 'price']
+      attributes: ['id','itemName', 'itemType','itemQuantity', 'saleDuration', 'server', 'price']
     });
 
     res.status(200).json(items.map(item => ({
+      itemId:item.id,
       itemName: item.itemName,
       itemType: item.itemType,
       saleDuration: item.saleDuration,
       server: item.server,
       price: item.price,
-      sellerName: item.seller?.name 
+      quantity:item.itemQuantity,
+      sellerName: item.seller?.name ,
+      
     })));
   } catch (error) {
     console.error('Error retrieving items:', error);
@@ -121,17 +143,12 @@ exports.getAllItems = async (req, res) => {
   }
 };
 
-
-
-
-
 exports.getItemTypes = (req, res) => {
   try {
-    // Estrutura o JSON de resposta
     const response = {
-      itemTypes: Object.values(ITEM_TYPES) // Extrai os valores dos tipos de itens
+      itemTypes: Object.values(ITEM_TYPES)
     };
-    res.status(200).json(response); // Retorna o JSON estruturado
+    res.status(200).json(response);
   } catch (error) {
     console.error('Error fetching item types:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -141,22 +158,38 @@ exports.getItemTypes = (req, res) => {
 exports.searchItemsByName = async (req, res) => {
   const { itemName } = req.query;
 
-  if (!itemName) {
-    return res.status(400).json({ message: 'Nome do item é obrigatório' });
-  }
+  if (!itemName) return sendErrorResponse(res, 400, 'itemName is required');
 
   try {
     const items = await Item.findAll({
       where: {
         itemName: {
-          [Op.iLike]: `%${itemName}%`, // Ignora maiúsculas e minúsculas
+          [Op.iLike]: `%${itemName}%`,
         },
       },
     });
 
     res.json(items);
   } catch (error) {
-    console.error('Erro ao buscar itens:', error);
-    res.status(500).json({ message: 'Erro ao buscar itens', error: error.message || error });
+    console.error('Error searching items:', error);
+    res.status(500).json({ message: 'Error searching items', error: error.message || error });
   }
 };
+
+exports.searchItemsByServer = async (req, res) =>{
+  const { serverName } = req.query;
+  if(!serverName) return sendErrorResponse(res,400,'ServerName is required');
+  try {
+    const items= await Item.findAll({
+      where: {
+        server:{
+          [Op.iLike]: `%${serverName}`,
+        },
+      },
+    });
+    res.json(items);
+  } catch (error) {
+    console.error('Error searching items:', error);
+    res.status(500).json({message: 'Error searching items', error: error.message || error})
+  }
+}
