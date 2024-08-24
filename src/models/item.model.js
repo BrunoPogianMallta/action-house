@@ -5,10 +5,10 @@ const { v4: uuidv4 } = require('uuid');
 
 const Item = sequelize.define('Item', {
   id: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING,  // ID está definido como STRING
     primaryKey: true,
   },
-  itemName: {  // Verifique se "itemName" é o nome correto
+  itemName: {
     type: DataTypes.STRING,
     allowNull: false,
   },
@@ -46,7 +46,7 @@ const Item = sequelize.define('Item', {
   hooks: {
     beforeCreate: (item) => {
       const prefix = Item.tableName.toUpperCase() + '_';
-      item.id = `${prefix}${uuidv4()}`;
+      item.id = `${prefix}${uuidv4()}`;  // Gera ID com prefixo baseado no nome da tabela
     }
   }
 });

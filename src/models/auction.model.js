@@ -4,10 +4,10 @@ const { v4: uuidv4 } = require('uuid');
 
 const Auction = sequelize.define('Auction', {
   id: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING,  
     primaryKey: true,
   },
-  itemId: {  // Verifique se "itemId" é o nome correto
+  itemId: {
     type: DataTypes.STRING, 
     allowNull: false,
     references: {
@@ -16,7 +16,7 @@ const Auction = sequelize.define('Auction', {
     },
   },
   sellerId: {
-    type: DataTypes.STRING, 
+    type: DataTypes.STRING,  
     allowNull: false,
     references: {
       model: 'Users',
@@ -40,7 +40,7 @@ const Auction = sequelize.define('Auction', {
     allowNull: false,
   },
   buyerId: {
-    type: DataTypes.STRING, 
+    type: DataTypes.STRING,  
     allowNull: true,
     references: {
       model: 'Users',
@@ -57,9 +57,10 @@ const Auction = sequelize.define('Auction', {
   hooks: {
     beforeCreate: (auction) => {
       const prefix = Auction.tableName.toUpperCase() + '_';
-      auction.id = `${prefix}${uuidv4()}`;
+      auction.id = `${prefix}${uuidv4()}`;  
     }
   }
 });
+
 
 module.exports = Auction;
