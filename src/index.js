@@ -8,7 +8,7 @@ const app = express();
 
 // Configurar CORS para permitir solicitações do frontend
 const corsOptions = {
-    origin:  'http://localhost:3000', // URL do frontend, altere conforme necessário
+    origin:   [process.env.LOCAL_FRONTEND_URL, process.env.FRONTEND_URL], // URL do frontend, altere conforme necessário
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 };
