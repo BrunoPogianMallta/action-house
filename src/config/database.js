@@ -1,13 +1,15 @@
 require('dotenv').config();
 const { Sequelize } = require('sequelize');
 
-const databaseUrl =`postgres://${process.env.LOCAL_DB_USER}:${process.env.LOCAL_DB_PASSWORD}@localhost:5432/${process.env.LOCAL_DB_NAME}`;
+
+const databaseUrl = process.env.DATABASE_URL || 
+    `postgres://${process.env.LOCAL_DB_USER}:${process.env.LOCAL_DB_PASSWORD}@localhost:5432/${process.env.LOCAL_DB_NAME}`;
 
 const sequelize = new Sequelize(databaseUrl, {
     dialect: 'postgres',
     logging: false,
     dialectOptions: {
-        ssl: process.env.REMOTE_DB_URL ? {
+        ssl: process.env.DATABASE_URL ? { 
             require: true,
             rejectUnauthorized: false
         } : undefined
