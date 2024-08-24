@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
-const { ITEM_TYPES } = require('../utils');
 const { v4: uuidv4 } = require('uuid'); 
 
 const Item = sequelize.define('Item', {
@@ -36,10 +35,11 @@ const Item = sequelize.define('Item', {
     type: DataTypes.STRING,
     allowNull: false,
     references: {
-      model: 'Users',
+      model: 'Users', // Certifique-se de que o nome da tabela Users está correto
       key: 'id',
     }
   }
+  
 }, {
   tableName: 'Items', 
   timestamps: true,

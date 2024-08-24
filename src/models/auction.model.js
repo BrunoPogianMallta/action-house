@@ -8,7 +8,7 @@ const Auction = sequelize.define('Auction', {
     primaryKey: true,
   },
   itemId: {
-    type: DataTypes.STRING, 
+    type: DataTypes.STRING,  // Deve ser o mesmo tipo que 'id' em 'Items'
     allowNull: false,
     references: {
       model: 'Items',
@@ -19,7 +19,7 @@ const Auction = sequelize.define('Auction', {
     type: DataTypes.STRING,  
     allowNull: false,
     references: {
-      model: 'Users',
+      model: 'Users', // Certifique-se de que o nome da tabela Users está correto
       key: 'id',
     },
   },
@@ -43,7 +43,7 @@ const Auction = sequelize.define('Auction', {
     type: DataTypes.STRING,  
     allowNull: true,
     references: {
-      model: 'Users',
+      model: 'Users', // Certifique-se de que o nome da tabela Users está correto
       key: 'id',
     },
   },
@@ -61,6 +61,5 @@ const Auction = sequelize.define('Auction', {
     }
   }
 });
-
 
 module.exports = Auction;

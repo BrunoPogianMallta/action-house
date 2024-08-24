@@ -17,3 +17,4 @@ Item.hasMany(Auction, { foreignKey: 'itemId', as: 'auctions' });
 Auction.belongsTo(Item, { foreignKey: 'itemId', as: 'item' });
 
 module.exports = { User, Item, Server, Auction };
+

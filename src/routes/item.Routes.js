@@ -5,6 +5,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
 
 const router = express.Router()
 
+
 // Rota para adicionar um novo item (requer autenticação)
 router.post('/items', authMiddleware, itemController.addItem);
 router.post('/buy-item', authMiddleware, itemController.buyItem);
