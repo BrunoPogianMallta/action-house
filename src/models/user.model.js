@@ -28,6 +28,14 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: false,
     defaultValue: 'basic', 
+  },
+  resetPasswordToken: {
+    type: DataTypes.STRING,
+    allowNull: true, // Pode ser nulo até que um reset de senha seja solicitado
+  },
+  resetPasswordExpires: {
+    type: DataTypes.DATE,
+    allowNull: true, // Pode ser nulo até que um reset de senha seja solicitado
   }
 }, {
   timestamps: true,
@@ -35,6 +43,7 @@ const User = sequelize.define('User', {
     beforeCreate: (user) => {
       const prefix = User.tableName.toUpperCase() + '_';
       user.id = `${prefix}${uuidv4()}`; 
+      
     }
   }
 });

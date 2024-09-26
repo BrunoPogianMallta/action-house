@@ -1,6 +1,10 @@
 const db = require('../models');
 const bcrypt =require('bcrypt');
 const jwt = require ('jsonwebtoken');
+const generateResetToken = require('../utils/generateResetToken');
+const sendResetEmail = require('../utils/sendResetEmail');
+const resetUserPassword = require('../utils/resetPassword');
+
 const { User } = db;
 const { JWT_SECRET } = process.env;
 
@@ -29,7 +33,7 @@ exports.registerUser = async( req, res) =>{
         });
 
         //gerar token JWT
-        const token =jwt.sign({ id: newUser.id}, JWT_SECRET, { expiresIn: '1'});
+        const token =jwt.sign({ id: newUser.id}, JWT_SECRET, { expiresIn: '1hr'});
         
         res.status(200).json({ message: 'Usuário registrado com sucesso!',token});
 
@@ -103,4 +107,46 @@ exports.loginUser = async (req, res) => {
         console.error('Erro ao buscar dados do usuário:', error);
         res.status(500).json({ error: 'Erro interno do servidor.' });
     }
+};
+
+exports.requestPasswordReset = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+      return res.status(400).json({ error: 'O e-mail é obrigatório.' });
+  }
+
+  try {
+      const user = await User.findOne({ where: { email } });
+
+      if (!user) {
+          return res.status(404).json({ error: 'Usuário não encontrado.' });
+      }
+
+      const resetToken = await generateResetToken(user);
+      console.log(resetToken)
+
+      await sendResetEmail(email, resetToken);
+
+      res.status(200).json({ message: 'E-mail de redefinição de senha enviado com sucesso!' });
+  } catch (error) {
+      console.error('Erro ao solicitar redefinição de senha:', error);
+      res.status(500).json({ error: 'Erro interno do servidor.' });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  if (!token || !newPassword) {
+    return res.status(400).json({ error: 'Token e nova senha são obrigatórios.' });
+  }
+
+  try {
+    await resetUserPassword(token, newPassword);
+    res.status(200).json({ message: 'Senha redefinida com sucesso!' });
+  } catch (error) {
+    console.error('Erro ao redefinir senha:', error);
+    res.status(400).json({ error: error.message });
+  }
 };

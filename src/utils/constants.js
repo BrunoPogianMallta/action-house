@@ -4,7 +4,7 @@ const ITEM_TYPES = {
     EQUIPABLES: 'equipables',
     MATERIALS: 'materials',
     SERVICES: 'services',
-    EXTRAS: 'dorgas manolo'
+    EXTRAS: 'Raid Service'
   };
 
   const SERVER_LIST = ['Server1', 'Server2', 'Server3'];

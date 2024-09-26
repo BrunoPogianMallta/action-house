@@ -1,8 +1,8 @@
 require('dotenv').config();
 const { Sequelize } = require('sequelize');
 
-
-const databaseUrl = process.env.DATABASE_URL || 
+// process.env.DATABASE_URL ||
+const databaseUrl =  
     `postgres://${process.env.LOCAL_DB_USER}:${process.env.LOCAL_DB_PASSWORD}@localhost:5432/${process.env.LOCAL_DB_NAME}`;
 
 const sequelize = new Sequelize(databaseUrl, {
