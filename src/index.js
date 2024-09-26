@@ -6,9 +6,9 @@ require('dotenv').config();
 
 const app = express();
 
-
+// Configuração de CORS
 const corsOptions = {
-    origin:   [process.env.LOCAL_FRONTEND_URL, process.env.FRONTEND_URL,'localhost'],
+    origin: [process.env.LOCAL_FRONTEND_URL, process.env.FRONTEND_URL, 'localhost'],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 };
@@ -17,19 +17,24 @@ app.use(cors(corsOptions));
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true }));
 
+
 app.use('/api/v1', routes);
 
+// Configuração da Porta
 const PORT = process.env.PORT || 3000;
+
 
 (async () => {
     try {
+        
         await connectToDatabase();  
         await sequelize.sync(); 
         
+        
         app.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
+            console.log(`Servidor rodando na porta ${PORT}`);
         });
     } catch (error) {
-        console.error('Unable to connect to the database:', error);
+        console.error('Não foi possível conectar ao banco de dados:', error);
     }
 })();

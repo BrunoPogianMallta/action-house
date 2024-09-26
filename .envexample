@@ -1,0 +1,21 @@
+# Configurações do banco de dados local
+LOCAL_DB_NAME=
+LOCAL_DB_USER=
+LOCAL_DB_PASSWORD=
+
+# Configurações do banco de dados remoto
+DATABASE_URL=postgresql:
+
+# Configurações adicionais
+JWT_SECRET=
+PORT=3001
+
+# URLs permitidas pelo CORS
+FRONTEND_URL=https://action-house-front.vercel.app 
+LOCAL_FRONTEND_URL=http://localhost:3000
+
+# Credenciais de Email
+EMAIL_USER=
+EMAIL_PASS=
+BASE_URL=http://localhost:3000
+
