@@ -4,7 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const Item = sequelize.define('Item', {
   id: {
-    type: DataTypes.STRING,  // ID está definido como STRING
+    type: DataTypes.STRING, 
     primaryKey: true,
   },
   itemName: {
@@ -23,6 +23,10 @@ const Item = sequelize.define('Item', {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
+  saleExpirationDate: {  
+    type: DataTypes.DATE,
+    allowNull: false,
+  },
   server: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -35,18 +39,20 @@ const Item = sequelize.define('Item', {
     type: DataTypes.STRING,
     allowNull: false,
     references: {
-      model: 'Users', // Certifique-se de que o nome da tabela Users está correto
+      model: 'Users',  
       key: 'id',
     }
   }
-  
 }, {
   tableName: 'Items', 
   timestamps: true,
   hooks: {
     beforeCreate: (item) => {
       const prefix = Item.tableName.toUpperCase() + '_';
-      item.id = `${prefix}${uuidv4()}`;  // Gera ID com prefixo baseado no nome da tabela
+      item.id = `${prefix}${uuidv4()}`;  
+
+      // Calcula a data de expiração da venda com base na duração da venda
+      item.saleExpirationDate = new Date(Date.now() + item.saleDuration * 3600 * 1000);
     }
   }
 });

@@ -25,14 +25,14 @@ exports.registerUser = async( req, res) =>{
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        //criar usuário
+        
         const newUser = await User.create({
             name: name,
             email: email,
             password: hashedPassword
         });
 
-        //gerar token JWT
+      
         const token =jwt.sign({ id: newUser.id}, JWT_SECRET, { expiresIn: '1hr'});
         
         res.status(200).json({ message: 'Usuário registrado com sucesso!',token});
@@ -46,31 +46,31 @@ exports.registerUser = async( req, res) =>{
 exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
   
-    // Verifica se o email e a senha foram fornecidos
+ 
     if (!email || !password) {
       return res.status(400).json({ error: 'Email e senha são obrigatórios.' });
     }
   
     try {
-      // Encontra o usuário pelo email
+    
       const user = await User.findOne({ where: { email } });
   
-      // Verifica se o usuário existe
+     
       if (!user) {
         return res.status(404).json({ error: 'Usuário não encontrado.' });
       }
   
-      // Verifica se a senha está correta
+     
       const isPasswordValid = await bcrypt.compare(password, user.password);
   
       if (!isPasswordValid) {
         return res.status(401).json({ error: 'Senha incorreta.' });
       }
   
-      // Gera um token JWT
+  
       const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '1hr' });
   
-      // Responde com o token e os detalhes do usuário
+   
       res.status(200).json({
         message: 'Login bem-sucedido!',
         token,
@@ -88,7 +88,7 @@ exports.loginUser = async (req, res) => {
 
   exports.getUserDetails = async (req, res) => {
     try {
-        const userId = req.user.id; // ID do usuário extraído do token
+        const userId = req.user.id; 
 
         const user = await User.findByPk(userId);
 
@@ -124,8 +124,6 @@ exports.requestPasswordReset = async (req, res) => {
       }
 
       const resetToken = await generateResetToken(user);
-      console.log(resetToken)
-
       await sendResetEmail(email, resetToken);
 
       res.status(200).json({ message: 'E-mail de redefinição de senha enviado com sucesso!' });
@@ -139,14 +137,14 @@ exports.resetPassword = async (req, res) => {
   const { token, newPassword } = req.body;
 
   if (!token || !newPassword) {
-    return res.status(400).json({ error: 'Token e nova senha são obrigatórios.' });
+      return res.status(400).json({ error: 'Token e nova senha são obrigatórios.' });
   }
 
   try {
-    await resetUserPassword(token, newPassword);
-    res.status(200).json({ message: 'Senha redefinida com sucesso!' });
+      const user = await resetUserPassword(token, newPassword); 
+      res.status(200).json({ message: 'Senha redefinida com sucesso!' });
   } catch (error) {
-    console.error('Erro ao redefinir senha:', error);
-    res.status(400).json({ error: error.message });
+      console.error('Erro ao redefinir senha:', error);
+      res.status(400).json({ error: error.message });
   }
 };
