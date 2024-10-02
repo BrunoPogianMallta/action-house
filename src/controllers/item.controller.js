@@ -27,28 +27,42 @@ const sendErrorResponse = (res, status, message) => {
 };
 
 exports.addItem = async (req, res) => {
-  const { itemName, itemType, saleDuration, server,itemQuantity, price } = req.body;
+  const { itemName, itemType, saleDuration, server, itemQuantity, price } = req.body;
   const sellerId = req.user?.id;
 
-  
   try {
-    // Validação dos dados do item
-    const errors = validateItemData({ itemName, itemType, saleDuration, server,itemQuantity, price });
+    
+    const errors = validateItemData({ itemName, itemType, saleDuration, server, itemQuantity, price });
     if (errors.length > 0) return sendErrorResponse(res, 400, `Validation errors: ${errors.join(', ')}`);
     
     if (!sellerId) return sendErrorResponse(res, 400, 'sellerId is missing');
 
-    // Verifica se o servidor é válido
+    
     const validServer = await Server.findOne({ where: { serverName: server } });
     if (!validServer) return sendErrorResponse(res, 400, 'Invalid server');
 
-    const item = await Item.create({ itemName, itemType, saleDuration, server, price,itemQuantity, sellerId });
+    
+    const saleExpirationDate = new Date(Date.now() + saleDuration * 3600 * 1000);
+
+    
+    const item = await Item.create({
+      itemName,
+      itemType,
+      saleDuration,
+      saleExpirationDate,  
+      server,
+      price,
+      itemQuantity,
+      sellerId
+    });
+
     res.status(201).json(item);
   } catch (error) {
     console.error('Error adding item:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
 
 exports.buyItem = async (req, res) => {
   const { itemId } = req.body;
@@ -57,7 +71,7 @@ exports.buyItem = async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
-    // Buscar o item a ser comprado
+    
     const item = await Item.findByPk(itemId, { transaction });
     if (!item) {
       console.log('Item not found:', itemId);
@@ -65,7 +79,7 @@ exports.buyItem = async (req, res) => {
       return res.status(404).json({ message: 'Item not found' });
     }
 
-    // Buscar o comprador
+    
     const buyer = await User.findByPk(buyerId, { transaction });
     if (!buyer) {
       console.log('Buyer not found:', buyerId);
@@ -79,29 +93,29 @@ exports.buyItem = async (req, res) => {
       return res.status(400).json({ message: 'Insufficient balance' });
     }
 
-    // Atualizar o saldo do comprador
+    
     buyer.balance -= item.price;
     await buyer.save({ transaction });
 
-    // Criar uma nova entrada na tabela de leilões
+    
     const auction = await Auction.create({
       itemId: item.id, 
       sellerId: item.sellerId,
       itemType: item.itemType,
       server: item.server,
       postedDate: new Date(),
-      saleExpirationDate: new Date(Date.now() + item.saleDuration * 3600 * 1000), // Usar a duração da venda do item
+      saleExpirationDate: new Date(Date.now() + item.saleDuration * 3600 * 1000), 
       buyerId: buyerId,
       isSold: true,
     }, { transaction });
 
     console.log('Auction created:', auction);
 
-    // Verificar se a entrada foi realmente criada
+    
     const createdAuction = await Auction.findByPk(auction.id, { transaction });
     console.log('Created Auction:', createdAuction);
 
-    // Remover o item da lista de itens disponíveis
+    
     await item.destroy({ transaction });
     console.log('Item removed successfully:', itemId);
 
