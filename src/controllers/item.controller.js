@@ -137,25 +137,26 @@ exports.getAllItems = async (req, res) => {
         as: 'seller',
         attributes: ['name']
       }],
-      attributes: ['id','itemName', 'itemType','itemQuantity', 'saleDuration', 'server', 'price']
+      attributes: ['id', 'itemName', 'itemType', 'itemQuantity', 'saleDuration', 'saleExpirationDate', 'server', 'price']
     });
 
     res.status(200).json(items.map(item => ({
-      itemId:item.id,
+      itemId: item.id,
       itemName: item.itemName,
       itemType: item.itemType,
       saleDuration: item.saleDuration,
+      saleExpirationDate: item.saleExpirationDate, 
       server: item.server,
       price: item.price,
-      quantity:item.itemQuantity,
-      sellerName: item.seller?.name ,
-      
+      quantity: item.itemQuantity,
+      sellerName: item.seller?.name,
     })));
   } catch (error) {
     console.error('Error retrieving items:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
 
 exports.getItemTypes = (req, res) => {
   try {
