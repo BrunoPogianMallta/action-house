@@ -6,20 +6,20 @@ const { ITEM_TYPES } = require('../utils');
 
 const SALE_DURATIONS = [12, 24, 48];
 
-// Função para validar dados de item
 const validateItemData = ({ itemName, itemType, saleDuration, server, price }) => {
   const errors = [];
 
+  console.log('Duração da venda (tipo):', typeof saleDuration, saleDuration);
+
   if (!itemName) errors.push('itemName is missing');
   if (!itemType) errors.push('itemType is missing');
-  if (!saleDuration) errors.push('saleDuration is missing');
+  if (!saleDuration || isNaN(saleDuration)) errors.push('saleDuration is missing or not a number');
   if (!price) errors.push('price is missing');
   if (!Object.values(ITEM_TYPES).includes(itemType)) errors.push('Invalid item type');
-  if (!SALE_DURATIONS.includes(saleDuration)) errors.push('Invalid sale duration');
+  if (!SALE_DURATIONS.includes(parseInt(saleDuration, 10))) errors.push('Invalid sale duration');
 
   return errors;
 };
-
 // Função para enviar resposta de erro
 const sendErrorResponse = (res, status, message) => {
   console.log(message);

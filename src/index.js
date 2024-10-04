@@ -2,11 +2,12 @@ const express = require('express');
 const { sequelize, connectToDatabase } = require('./config/database'); 
 const routes = require('./routes');
 const cors = require('cors');
+require('./utils/cronjobs');
 require('dotenv').config();
 
 const app = express();
 
-// Configuração de CORS
+
 const corsOptions = {
     origin: [process.env.LOCAL_FRONTEND_URL, process.env.FRONTEND_URL, 'localhost'],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -20,7 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/api/v1', routes);
 
-// Configuração da Porta
+
 const PORT = process.env.PORT || 3000;
 
 
