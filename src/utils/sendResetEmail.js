@@ -1,4 +1,4 @@
-require('dotenv').config(); // Carrega as variáveis do arquivo .env
+require('dotenv').config(); 
 
 const nodemailer = require('nodemailer');
 
@@ -32,5 +32,6 @@ async function sendResetEmail(email, resetToken) {
         console.error('Erro ao enviar o e-mail de redefinição de senha:', error);
     }
 }
+
 
 module.exports = sendResetEmail;
