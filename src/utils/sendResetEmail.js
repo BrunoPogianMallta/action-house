@@ -13,13 +13,22 @@ async function sendResetEmail(email, resetToken) {
         to: email,
         from: process.env.EMAIL_USER,
         subject: 'Redefinição de Senha',
-        text: `Você está recebendo este e-mail porque recebemos uma solicitação de redefinição de senha para sua conta.\n\n
-        Clique no link abaixo para redefinir sua senha:\n\n
-        ${process.env.BASE_URL}/reset-password/${resetToken}\n\n
-        Se você não solicitou uma redefinição de senha, ignore este e-mail.\n`
+        html: `
+            <p>Você está recebendo este e-mail porque recebemos uma solicitação de redefinição de senha para sua conta.</p>
+            <p>
+                Clique no link abaixo para redefinir sua senha:<br>
+                <a href="${process.env.BASE_URL}/reset-password/${resetToken}" style="color: #007bff; text-decoration: none;">Redefinir Senha</a>
+            </p>
+            <p>Se você não solicitou uma redefinição de senha, ignore este e-mail.</p>
+        `
     };
 
-    await transporter.sendMail(mailOptions);
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log('E-mail de redefinição de senha enviado com sucesso!');
+    } catch (error) {
+        console.error('Erro ao enviar o e-mail de redefinição de senha:', error);
+    }
 }
 
 module.exports = sendResetEmail;

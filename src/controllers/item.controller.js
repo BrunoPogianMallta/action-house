@@ -20,7 +20,7 @@ const validateItemData = ({ itemName, itemType, saleDuration, server, price }) =
 
   return errors;
 };
-// Função para enviar resposta de erro
+
 const sendErrorResponse = (res, status, message) => {
   console.log(message);
   res.status(status).json({ message });
@@ -173,18 +173,20 @@ exports.getItemTypes = (req, res) => {
 exports.searchItemsByName = async (req, res) => {
   const { itemName } = req.query;
 
-  if (!itemName) return sendErrorResponse(res, 400, 'itemName is required');
+  if (!itemName || itemName.trim().length === 0) {
+    return res.json([]); // Retorna uma lista vazia para evitar processamento desnecessário
+  }
 
   try {
     const items = await Item.findAll({
       where: {
         itemName: {
-          [Op.iLike]: `%${itemName}%`,
+          [Op.iLike]: `%${itemName}%`, // Pesquisa com indiferença a maiúsculas/minúsculas
         },
       },
     });
 
-    res.json(items);
+    res.json(items); 
   } catch (error) {
     console.error('Error searching items:', error);
     res.status(500).json({ message: 'Error searching items', error: error.message || error });

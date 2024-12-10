@@ -1,18 +1,26 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
+const isProduction = process.env.APP_ENV === 'production';
 
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
-    dialect: 'postgres',
-    dialectOptions: {
-        ssl: {
-            require: true,
-            rejectUnauthorized: false 
-        },
-    
-    },
-    logging: false,
-});
+
+const sequelize = new Sequelize(
+    isProduction
+        ? process.env.DATABASE_URL
+        : `postgres://${process.env.LOCAL_DB_USER}:${process.env.LOCAL_DB_PASSWORD}@${process.env.LOCAL_DB_HOST}:${process.env.LOCAL_DB_PORT}/${process.env.LOCAL_DB_NAME}`,
+    {
+        dialect: 'postgres',
+        dialectOptions: isProduction
+            ? {
+                ssl: {
+                    require: true,
+                    rejectUnauthorized: false, // Necessário para servidores sem certificados confiáveis
+                },
+            }
+            : {},
+        logging: false,
+    }
+);
 
 const connectToDatabase = async () => {
     try {
