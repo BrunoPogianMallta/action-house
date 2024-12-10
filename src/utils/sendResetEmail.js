@@ -1,3 +1,5 @@
+require('dotenv').config(); // Carrega as variáveis do arquivo .env
+
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
