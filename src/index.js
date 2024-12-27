@@ -1,5 +1,5 @@
 const express = require('express');
-const { sequelize, connectToDatabase } = require('./config/database'); 
+const { sequelize, connectToDatabase } = require('./config/database');
 const routes = require('./routes');
 const cors = require('cors');
 require('./utils/cronjobs');
@@ -9,9 +9,9 @@ const app = express();
 
 // Configurações de CORS
 const corsOptions = {
-    origin: [process.env.LOCAL_FRONTEND_URL, process.env.FRONTEND_URL], // URLs permitidas para acessar o backend
+    origin: process.env.FRONTEND_URL, // URL permitida
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Métodos permitidos
-    credentials: true // Permitir envio de cookies e headers de autenticação
+    credentials: true, // Permitir envio de cookies e headers de autenticação
 };
 
 // Middlewares
@@ -23,21 +23,22 @@ app.use(express.urlencoded({ extended: true })); // Suporte para formulários no
 app.use('/api/v1', routes);
 
 // Porta do servidor
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Inicialização do servidor
 (async () => {
     try {
         // Conexão com o banco de dados
-        await connectToDatabase();  
-        await sequelize.sync(); 
-        
+        await connectToDatabase();
+        await sequelize.sync({ alter: true }); // Sincronizar com o banco, alterando tabelas conforme necessário
+
         // Inicia o servidor
         app.listen(PORT, () => {
             console.log(`Servidor rodando na porta ${PORT}`);
-            console.log(`Permitindo conexões de: ${process.env.LOCAL_FRONTEND_URL}, ${process.env.FRONTEND_URL}`);
+            console.log(`Permitindo conexões de: ${process.env.FRONTEND_URL}`);
         });
     } catch (error) {
         console.error('Não foi possível conectar ao banco de dados:', error);
+        process.exit(1); // Encerra o processo em caso de falha
     }
 })();
