@@ -21,6 +21,7 @@ const validateItemData = ({ itemName, itemType, saleDuration, server, price }) =
   return errors;
 };
 
+
 const sendErrorResponse = (res, status, message) => {
   console.log(message);
   res.status(status).json({ message });
